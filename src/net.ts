@@ -31,7 +31,7 @@ export interface Net {
   /** True until the first connection settles whether a saved session can resume. */
   resuming: boolean;
   view: RoomView | null;
-  /** Local time (performance.now) at which the open question's clock runs out. */
+  /** Local time (performance.now) at which the open buzz or answer window runs out. */
   deadline: number;
   error: { code: string; message: string } | null;
   peekHost: string | null;
@@ -83,7 +83,7 @@ export function useRoomServer(): Net {
           setError(null);
         } else if (m.t === "state") {
           setView(m.view);
-          setDeadline(m.view.phase === "question" ? performance.now() + m.view.remainingMs : 0);
+          setDeadline(m.view.remainingMs > 0 ? performance.now() + m.view.remainingMs : 0);
           markResumed();
         } else if (m.t === "peek") {
           setPeekHost(m.host);

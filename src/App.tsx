@@ -68,9 +68,9 @@ export function App() {
         invite={invite}
         inviteHost={net.peekHost}
         error={error?.message ?? null}
-        onCreate={(name, timeLimit) => {
+        onCreate={(name, rules) => {
           clearError();
-          send({ t: "create", name, timeLimit });
+          send({ t: "create", name, rules });
         }}
         onJoin={(name) => {
           clearError();

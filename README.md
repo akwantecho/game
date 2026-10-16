@@ -7,7 +7,7 @@ Two players, one phone each. Built from the Claude Design screen
 ```
 npm install
 npm run dev      # Vite on :5173 + room server on :8787 (Vite proxies /ws)
-npm test         # rules + a full two-client match over real WebSockets
+npm test         # rules, each match variant, and a full two-client match over real WebSockets
 npm run build && npm start   # one process on $PORT (default 8787) serves app + /ws
 ```
 
@@ -20,6 +20,10 @@ To try it with two real phones on the same Wi-Fi, run `npm run dev` and open
   questions, keeps the clock (with 400 ms of grace for network latency) and
   grades answers. The phones only send intents (`pick`, `answer`, …). The
   answer to an open question never leaves the server until the turn ends.
+  A room never asks the same question twice, even across rematches. It also
+  holds back questions whose answer has already come up on that letter. Only
+  when every question for a letter has been asked does it reuse the one asked
+  longest ago.
 - **`shared/`** contains the board rules (answer normalisation, hex neighbours
   and the win-path search) and the message types.
 - **`src/`** is the React client. Each phone renders its own view of the room.
@@ -28,9 +32,10 @@ To try it with two real phones on the same Wi-Fi, run `npm run dev` and open
 
 ### Flow
 
-1. Each player types their name. The host picks the answer time (10, 20 or
-   30 s) and creates a room. They get a 5-character code and a share button
-   that sends `…/?room=CODE`.
+1. Each player types their name and the host creates a room. They get a
+   5-character code and a share button that sends `…/?room=CODE`. While
+   waiting, the host sets the match rules (see below). The guest sees them
+   update live, and the host's phone remembers them for the next room.
 2. The guest enters the code, or opens the link. A wrong code shows
    «الرمز غير صحيح…».
 3. «ابدأ المباراة» is enabled once the guest is connected. The host (cyan)
@@ -39,6 +44,23 @@ To try it with two real phones on the same Wi-Fi, run `npm run dev` and open
 4. Only the player whose turn it is can pick a cell and type. The other phone
    shows the question and the timer. Both phones see the result. The first
    unbroken path wins, and either player can start «مباراة أخرى».
+
+### Match rules
+
+The host picks a preset («كلاسيكي», «حروف», «فوضى») or sets each rule on its
+own. `shared/game.ts` (`Rules`, `PRESETS`) defines them and `server/room.ts`
+enforces them.
+
+| Rule | Options | Effect |
+| --- | --- | --- |
+| Answer time | 10 / 20 / 30 s | Time to answer, and to buzz in buzzer mode |
+| Board size | 4×4 / 5×5 / 6×6 | A 6×6 board repeats a few letters, none more than twice |
+| Mode | بالدور / الجرس | Turns: the picker answers. Buzzer: both phones see the question, the first to buzz answers within 10 s. The picker still alternates |
+| Steal | on / off | A missed question goes to the other player for half the time (at least 8 s). They can pass. A steal that runs out doesn't count as wrong |
+| Special cells | on / off | Gold: whoever takes it picks next. Bomb: whoever misses it first loses a random cell. Fast: every window is halved (at least 5 s). 1, 2 or 3 of each, by board size |
+| Power-ups | on / off | Skip the question, +10 s, or a hint (first letter and one blank per letter). Each player gets each one once per match. The hint is visible only to the player who asked |
+| Category | on / off | After picking a letter, the picker chooses the question's category when the letter has more than one |
+| Penalty | بدون / قفل / للخصم | After a miss: nothing, the cell is locked for the next turn, or the cell goes to the opponent. With «للخصم» the steal is off. A lock is lifted when the locked cell is the only one left |
 
 ### Additions beyond the mock
 

@@ -67,7 +67,7 @@ export function attachHub(server: Server, path = "/ws") {
         const name = cleanName(m.name);
         if (!name) return fail(ws, "bad_name");
         if (room && seat !== undefined) room.setConnected(seat, -1);
-        const r = new Room(newCode(), name, Number(m.timeLimit), broadcast);
+        const r = new Room(newCode(), name, m.rules, broadcast);
         rooms.set(r.code, r);
         return bind(ws, c, r, 0, r.players[0].token);
       }
@@ -93,12 +93,20 @@ export function attachHub(server: Server, path = "/ws") {
     }
     if (!room || seat === undefined) return fail(ws, "session_lost");
     switch (m.t) {
+      case "rules":
+        return room.setRules(seat, m.rules);
       case "start":
         return room.start(seat);
       case "pick":
         return room.pick(seat, Number(m.cell));
+      case "category":
+        return room.chooseCategory(seat, String(m.name ?? ""));
+      case "buzz":
+        return room.buzz(seat);
       case "answer":
         return room.answer(seat, String(m.text ?? ""));
+      case "power":
+        return room.power(seat, m.kind);
       case "rematch":
         return room.rematch();
       case "leave":

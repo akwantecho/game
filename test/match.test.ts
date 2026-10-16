@@ -59,11 +59,11 @@ describe("online match", () => {
     const host = await phone();
     const guest = await phone();
 
-    host.send({ t: "create", name: "صلاح", timeLimit: 10 });
+    host.send({ t: "create", name: "صلاح", rules: { timeLimit: 10 } });
     const session = await host.next<{ t: "session"; code: string }>((m) => m.t === "session");
     const lobby = await host.state();
     expect(lobby.stage).toBe("lobby");
-    expect(lobby.timeLimit).toBe(10);
+    expect(lobby.rules.timeLimit).toBe(10);
 
     guest.send({ t: "join", code: "ZZZZZ", name: "سعد" });
     const err = await guest.next<{ t: "error"; code: string }>((m) => m.t === "error");
@@ -122,7 +122,7 @@ describe("online match", () => {
 
   it("times out an unanswered question and resumes a dropped phone", async () => {
     const host = await phone();
-    host.send({ t: "create", name: "أ", timeLimit: 10 });
+    host.send({ t: "create", name: "أ", rules: { timeLimit: 10 } });
     const s = await host.next<{ t: "session"; code: string; token: string }>((m) => m.t === "session");
     const guest = await phone();
     guest.send({ t: "join", code: s.code, name: "ب" });
@@ -148,7 +148,7 @@ describe("online match", () => {
     const q = await back.state((v) => v.phase === "question");
     expect(q.remainingMs).toBeGreaterThan(9000);
     const res = await back.state((v) => v.phase === "result", 12_000);
-    expect(res.result).toEqual({ ok: false, kind: "timeout", given: "" });
+    expect(res.result).toMatchObject({ ok: false, owner: null, attempts: [{ seat: 0, ok: false, kind: "timeout", given: "" }] });
 
     // host leaving closes the room for the guest
     host.send({ t: "leave" });
