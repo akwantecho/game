@@ -1,7 +1,7 @@
 # حرب الحروف — online match
 
 Two players, one phone each. Built from the Claude Design screen
-`project/Online Match Mobile.dc.html` (the Broadsheet design system lives in
+`design/project/Online Match Mobile.dc.html` (the Broadsheet design system lives in
 `src/styles/broadsheet.css`, copied unchanged).
 
 ```
@@ -62,3 +62,7 @@ The 42-question sample bank is in `server/questions.ts`, using the planned
 table's fields. Swapping it for the database, and keeping room state in
 Redis or Postgres when there is more than one server process, are the two
 things left before this goes to production.
+
+## Design files
+
+`design/` holds the original Claude Design export: the HTML prototypes, the Broadsheet design system and the design chat transcript. They are reference material only, and the app doesn't load them.

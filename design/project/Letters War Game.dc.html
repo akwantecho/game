@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/broadsheet-31adaa97-9197-4542-8d6e-46faf5ea3de9/styles.css">
+<script src="_ds/broadsheet-31adaa97-9197-4542-8d6e-46faf5ea3de9/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<style>
+:root{--font-body:"Source Serif 4","Noto Naskh Arabic",serif;--font-heading:"Source Serif 4","Noto Naskh Arabic",serif}
+html,body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)}
+a{color:var(--color-accent-700)}a:hover{color:var(--color-accent-900)}
+</style>
+</helmet>
+<div dir="rtl" lang="ar" style="min-height:100vh;display:flex;flex-direction:column;font-family:var(--font-body)">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;padding:var(--space-4) var(--space-6);border-bottom:3px solid var(--color-text)">
+    <div style="display:flex;align-items:baseline;gap:var(--space-4);flex-wrap:wrap">
+      <div style="font-size:30px;font-weight:700;letter-spacing:0">حرب الحروف</div>
+      <div style="font-size:16px;color:var(--color-neutral-700)">الجولة {{ turn }} · {{ modeLabel }}</div>
+    </div>
+    <div style="display:flex;gap:var(--space-2)">
+      <button class="btn btn-ghost" onClick="{{ openRules }}">القواعد</button>
+      <a class="btn btn-ghost" href="Players Setup.dc.html" style="text-decoration:none">اللاعبون</a>
+      <button class="btn btn-secondary" onClick="{{ newGame }}">مباراة جديدة</button>
+    </div>
+  </header>
+
+  <main style="flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:var(--space-8);padding:var(--space-6);max-width:1240px;width:100%;box-sizing:border-box;margin:0 auto;align-items:start">
+    <section style="display:flex;flex-direction:column;gap:var(--space-4);min-width:0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+        <sc-for list="{{ players }}" as="p" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:var(--space-1);padding:var(--space-3) 0 0;border-top:{{ p.topBorder }};opacity:{{ p.opacity }};transition:opacity .2s">
+            <div style="display:flex;align-items:center;gap:var(--space-2)">
+              <span style="width:14px;height:14px;background:{{ p.color }};clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);flex:none"></span>
+              <span style="font-size:22px;font-weight:700">{{ p.name }}</span>
+              <sc-if value="{{ p.isActive }}" hint-placeholder-val="{{ false }}">
+                <span class="tag {{ p.tagClass }}">دوره الآن</span>
+              </sc-if>
+            </div>
+            <div style="font-size:15px;color:var(--color-neutral-700)">{{ p.goal }}</div>
+            <div style="display:flex;gap:var(--space-4);font-size:15px;margin-top:var(--space-1)">
+              <span><b style="font-size:20px">{{ p.cells }}</b> خلايا</span>
+              <span><b style="font-size:20px">{{ p.correct }}</b> صحيحة</span>
+              <span><b style="font-size:20px">{{ p.wrong }}</b> خاطئة</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="width:100%;max-width:600px;margin:0 auto;position:relative">
+        <svg viewBox="0 0 475 408" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="لوحة الحروف">
+          <line x1="28" y1="12" x2="447" y2="12" stroke="var(--color-accent-2)" stroke-width="6" stroke-linecap="square"></line>
+          <line x1="28" y1="396" x2="447" y2="396" stroke="var(--color-accent-2)" stroke-width="6" stroke-linecap="square"></line>
+          <line x1="10" y1="50" x2="10" y2="358" stroke="var(--color-accent)" stroke-width="6" stroke-linecap="square"></line>
+          <line x1="465" y1="50" x2="465" y2="358" stroke="var(--color-accent)" stroke-width="6" stroke-linecap="square"></line>
+          <sc-for list="{{ cells }}" as="c" hint-placeholder-count="25">
+            <g onClick="{{ c.onClick }}" onMouseEnter="{{ c.onEnter }}" onMouseLeave="{{ c.onLeave }}" style="cursor:{{ c.cursor }}">
+              <polygon points="{{ c.points }}" fill="{{ c.fill }}" stroke="{{ c.stroke }}" stroke-width="{{ c.strokeW }}" stroke-dasharray="{{ c.dash }}" style="transition:fill .25s"></polygon>
+            </g>
+          </sc-for>
+        </svg>
+        <sc-for list="{{ cells }}" as="c" hint-placeholder-count="25">
+          <div style="position:absolute;left:{{ c.lx }};top:{{ c.ly }};transform:translate(-50%,-50%);color:{{ c.textFill }};font-family:'Noto Naskh Arabic',serif;font-size:clamp(20px,5.5vw,34px);font-weight:700;line-height:1;pointer-events:none">{{ c.letter }}</div>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;font-size:14px;color:var(--color-neutral-700)">
+        <span style="display:flex;align-items:center;gap:var(--space-2)"><span style="width:18px;height:4px;background:var(--color-accent)"></span>حافتا {{ p1Name }}: اليمين واليسار</span>
+        <span style="display:flex;align-items:center;gap:var(--space-2)"><span style="width:18px;height:4px;background:var(--color-accent-2)"></span>حافتا {{ p2Name }}: الأعلى والأسفل</span>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:var(--space-4);min-width:0;padding-top:var(--space-2)">
+      <sc-if value="{{ isPick }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div style="font-size:15px;color:var(--color-neutral-700)">الجولة {{ turn }}</div>
+          <h1 style="margin:0;font-size:48px;line-height:1.15;font-weight:700;text-wrap:pretty">دور <span style="color:{{ currentColor700 }}">{{ currentName }}</span></h1>
+          <p style="margin:0;font-size:20px;line-height:1.6;max-width:32em;text-wrap:pretty">اختر أي حرف محايد من اللوحة. سيظهر سؤال تبدأ إجابته بهذا الحرف، ولديك {{ timeLimit }} ثانية للإجابة.</p>
+          <p style="margin:0;font-size:17px;line-height:1.6;color:var(--color-neutral-700)">الهدف: مسار متصل {{ currentGoal }}.</p>
+          <sc-if value="{{ hasLast }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:var(--space-4) 0 0;font-size:16px;color:var(--color-neutral-700)">آخر سؤال: {{ lastText }}</p>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isQuestion }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4)">
+            <div style="display:flex;flex-direction:column;gap:var(--space-1)">
+              <div style="font-size:15px;color:var(--color-neutral-700)">{{ currentName }} · الحرف</div>
+              <div style="font-family:'Noto Naskh Arabic',serif;font-size:88px;line-height:1;font-weight:700;color:{{ currentColor }}">{{ q.letter }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-1)" dir="ltr">
+              <div style="font-size:64px;line-height:1;font-weight:600;font-variant-numeric:tabular-nums;color:{{ timerColor }}">{{ timerText }}</div>
+            </div>
+          </div>
+          <div style="height:4px;background:var(--color-neutral-200);position:relative;overflow:hidden">
+            <div style="position:absolute;inset-block:0;right:0;width:{{ timerPct }};background:{{ timerColor }};transition:width .1s linear"></div>
+          </div>
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+            <span class="tag tag-neutral">{{ q.category }}</span>
+            <span class="tag tag-outline">{{ q.difficulty }}</span>
+          </div>
+          <h2 style="margin:0;font-size:34px;line-height:1.4;font-weight:600;text-wrap:pretty">{{ q.question }}</h2>
+          <div class="field" style="display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-2)">
+            <label for="answer" style="font-size:16px">إجابتك تبدأ بحرف «{{ q.letter }}»</label>
+            <input id="answer" class="input" autocomplete="off" ref="{{ inputRef }}" value="{{ answer }}" onChange="{{ onAnswer }}" onKeyDown="{{ onKey }}" placeholder="اكتب الإجابة ثم اضغط Enter" style="font-size:24px;padding:var(--space-3) var(--space-4);min-height:56px">
+          </div>
+          <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+            <button class="btn btn-primary" onClick="{{ submit }}" style="min-height:48px;font-size:18px;padding-inline:var(--space-6)">إرسال الإجابة</button>
+            <button class="btn btn-ghost" onClick="{{ skip }}" style="min-height:48px">تخطٍّ (يُحتسب خطأ)</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isResult }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div style="font-size:15px;color:var(--color-neutral-700)">{{ currentName }} · الحرف «{{ q.letter }}»</div>
+          <h1 style="margin:0;font-size:56px;line-height:1.1;font-weight:700;color:{{ resultColor }}">{{ resultTitle }}</h1>
+          <p style="margin:0;font-size:20px;line-height:1.6">{{ q.question }}</p>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:var(--space-2) var(--space-6);font-size:20px;margin-top:var(--space-2)">
+            <span style="color:var(--color-neutral-700)">إجابتك</span><span>{{ givenText }}</span>
+            <span style="color:var(--color-neutral-700)">الإجابة النموذجية</span><span style="font-weight:700">{{ q.answer }}</span>
+          </div>
+          <p style="margin:var(--space-2) 0 0;font-size:16px;color:var(--color-neutral-700)">{{ resultNote }}</p>
+        </div>
+      </sc-if>
+    </section>
+  </main>
+
+  <sc-if value="{{ isWon }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:var(--space-4)">
+      <div class="dialog" dir="rtl" style="max-width:520px;width:100%">
+        <div style="font-size:15px;color:var(--color-neutral-700)">اكتمل المسار في الجولة {{ turn }}</div>
+        <h2 class="dialog-title" style="font-size:44px;margin:var(--space-1) 0 var(--space-4);color:{{ winnerColor700 }}">فاز {{ winnerName }}</h2>
+        <div class="dialog-body">
+          <table class="table" style="width:100%">
+            <thead><tr><th style="text-align:right">اللاعب</th><th style="text-align:right">صحيحة</th><th style="text-align:right">خاطئة</th><th style="text-align:right">متوسط الوقت</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ players }}" as="p" hint-placeholder-count="2">
+                <tr><td>{{ p.name }}</td><td>{{ p.correct }}</td><td>{{ p.wrong }}</td><td>{{ p.avg }}</td></tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <div class="dialog-actions" style="display:flex;gap:var(--space-2);margin-top:var(--space-6)">
+          <button class="btn btn-primary" onClick="{{ newGame }}">إعادة اللعب</button>
+          <button class="btn btn-ghost" onClick="{{ closeWin }}">عرض اللوحة</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showRules }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" onClick="{{ closeRules }}" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:var(--space-4)">
+      <div class="dialog" dir="rtl" onClick="{{ stop }}" style="max-width:560px;width:100%">
+        <h2 class="dialog-title" style="font-size:32px;margin:0 0 var(--space-3)">القواعد</h2>
+        <ol class="dialog-body" style="margin:0;padding-inline-start:var(--space-6);display:flex;flex-direction:column;gap:var(--space-2);font-size:18px;line-height:1.6">
+          <li>{{ p1Name }} يبني مساراً متصلاً من اليمين إلى اليسار، و{{ p2Name }} من الأعلى إلى الأسفل.</li>
+          <li>اختر خلية محايدة، وأجب عن سؤال تبدأ إجابته بحرفها خلال {{ timeLimit }} ثانية.</li>
+          <li>الإجابة الصحيحة تمنحك الخلية؛ الخاطئة أو انتهاء الوقت يُبقيانها محايدة.</li>
+          <li>ينتقل الدور بعد كل سؤال. العبرة بالمسار المتصل، لا بعدد الخلايا.</li>
+        </ol>
+        <div class="dialog-actions" style="display:flex;margin-top:var(--space-6)">
+          <button class="btn btn-primary" onClick="{{ closeRules }}">فهمت</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;timeLimit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[10,20,30],&quot;default&quot;:20,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;المباراة&quot;},&quot;startState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;midgame&quot;,&quot;fresh&quot;],&quot;default&quot;:&quot;midgame&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;المباراة&quot;},&quot;player1Name&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;صلاح&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;اللاعبون&quot;},&quot;player2Name&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;سعد&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;اللاعبون&quot;}}">
+const BANK = [
+ ["أ","جغرافيا","ما أكبر قارات العالم مساحة؟","آسيا",["اسيا","قارة اسيا"]],
+ ["أ","جغرافيا","ما عاصمة تركيا؟","أنقرة",[]],
+ ["ب","جغرافيا","ما عاصمة لبنان؟","بيروت",[]],
+ ["ب","جغرافيا","ما عاصمة العراق؟","بغداد",[]],
+ ["ت","ثقافة عامة","ما الثمرة التي تنتجها النخلة؟","تمر",["التمر"]],
+ ["ث","ثقافة عامة","ما الحيوان الماكر في الحكايات الشعبية؟","ثعلب",[]],
+ ["ث","علوم","كم عدد أضلاع المثلث؟","ثلاثة",["ثلاث","ثلاثه اضلاع"]],
+ ["ج","ثقافة عامة","ما الحيوان الملقب بسفينة الصحراء؟","جمل",["الجمل","ناقة"]],
+ ["ج","جغرافيا","ما عاصمة إندونيسيا؟","جاكرتا",[]],
+ ["ح","علوم","ما أضخم كائن حي على الأرض؟","حوت",["الحوت الأزرق","حوت أزرق"]],
+ ["ح","جغرافيا","ما المدينة السورية المشهورة بقلعتها؟","حلب",[]],
+ ["خ","جغرافيا","ما عاصمة السودان؟","الخرطوم",[]],
+ ["د","جغرافيا","ما عاصمة سوريا؟","دمشق",[]],
+ ["د","جغرافيا","في أي مدينة يقع برج خليفة؟","دبي",[]],
+ ["ذ","علوم","ما المعدن الأصفر النفيس؟","ذهب",[]],
+ ["ر","جغرافيا","ما عاصمة المملكة العربية السعودية؟","الرياض",[]],
+ ["ر","إسلاميات","ما الشهر التاسع في التقويم الهجري؟","رمضان",[]],
+ ["ز","علوم","ما الكوكب المشهور بحلقاته؟","زحل",[]],
+ ["س","جغرافيا","ما عاصمة كوريا الجنوبية؟","سيول",["سول"]],
+ ["ش","علوم","ما النجم الذي تدور حوله الأرض؟","الشمس",[]],
+ ["ص","ثقافة عامة","ما الطائر المستخدم في القنص؟","صقر",[]],
+ ["ص","جغرافيا","ما عاصمة اليمن؟","صنعاء",[]],
+ ["ض","علوم","ما الحيوان البرمائي الذي ينقّ؟","ضفدع",[]],
+ ["ط","جغرافيا","ما عاصمة ليبيا؟","طرابلس",[]],
+ ["ط","علوم","ما الطائر المعروف بذيله الملوّن المفروش؟","طاووس",["طاوس"]],
+ ["ظ","علوم","ما الحيوان الصحراوي الرشيق ذو القرنين؟","ظبي",["غزال"]],
+ ["ع","علوم","ما أقرب كوكب إلى الشمس؟","عطارد",[]],
+ ["ع","جغرافيا","ما عاصمة الأردن؟","عمّان",[]],
+ ["غ","إسلاميات","ما الطائر الذي علّم ابن آدم كيف يدفن أخاه؟","غراب",[]],
+ ["ف","علوم","ما أضخم حيوان يعيش على اليابسة؟","فيل",[]],
+ ["ق","جغرافيا","ما عاصمة مصر؟","القاهرة",[]],
+ ["ق","علوم","ما العضو الذي يضخ الدم في الجسم؟","قلب",[]],
+ ["ك","جغرافيا","ما عاصمة دولة الكويت؟","الكويت",["مدينة الكويت"]],
+ ["ل","جغرافيا","ما عاصمة المملكة المتحدة؟","لندن",[]],
+ ["م","جغرافيا","ما عاصمة سلطنة عُمان؟","مسقط",["مدينة مسقط"]],
+ ["م","علوم","ما الكوكب الملقب بالكوكب الأحمر؟","المريخ",[]],
+ ["ن","جغرافيا","ما أطول نهر في أفريقيا؟","النيل",["نهر النيل"]],
+ ["ن","علوم","ما الحشرة التي تصنع العسل؟","نحلة",["النحل"]],
+ ["ه","جغرافيا","ما الدولة التي عاصمتها نيودلهي؟","الهند",[]],
+ ["و","ثقافة عامة","ما الزهرة التي تُهدى رمزاً للمحبة؟","وردة",["ورد","الورد"]],
+ ["ي","جغرافيا","ما الدولة التي عاصمتها طوكيو؟","اليابان",[]],
+ ["ي","جغرافيا","ما الدولة التي عاصمتها صنعاء؟","اليمن",[]]
+].map((r,i)=>({id:"q_"+(1001+i),letter:r[0],category:r[1],difficulty:"سهل",question:r[2],answer:r[3],acceptedAnswers:[r[3]].concat(r[4]),isActive:true}));
+
+const N=5,R=44,W=Math.sqrt(3)*R,PAD=28;
+const norm=s=>(s||"").trim().replace(/[\u064B-\u065F\u0670\u0640]/g,"").replace(/[أإآٱ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/\s+/g," ").replace(/^ال/,"");
+const nbrs=(r,c)=>{const d=r%2?[[-1,0],[-1,1],[0,-1],[0,1],[1,0],[1,1]]:[[-1,-1],[-1,0],[0,-1],[0,1],[1,-1],[1,0]];return d.map(([a,b])=>[r+a,c+b]).filter(([x,y])=>x>=0&&y>=0&&x<N&&y<N);};
+const COLORS=[{c:"var(--color-accent)",c7:"var(--color-accent-700)",c1:"var(--color-accent-100)",tag:"tag-accent"},{c:"var(--color-accent-2)",c7:"var(--color-accent-2-700)",c1:"var(--color-accent-2-100)",tag:"tag-accent-2"}];
+const GOALS=["من اليمين إلى اليسار","من الأعلى إلى الأسفل"];
+
+class Component extends DCLogic {
+  inputRef = React.createRef();
+  setup = (()=>{try{const s=JSON.parse(localStorage.getItem("lettersWar.setup"));if(!s)return null;const byDir=[0,1].map(d=>s.players.find(p=>p.dir===d).name);return {names:byDir,first:s.players[s.first].dir,timeLimit:s.timeLimit,mode:s.mode};}catch(e){return null;}})();
+  state = this.fresh(this.setup?"fresh":(this.props.startState ?? "midgame"));
+
+  fresh(preset){
+    const letters=[...new Set(BANK.map(q=>q.letter))].sort(()=>Math.random()-.5).slice(0,25);
+    const owners=Array(25).fill(null);
+    let stats=[{correct:0,wrong:0,times:[]},{correct:0,wrong:0,times:[]}],turn=1;
+    if(preset==="midgame"){
+      [[2,0],[2,1],[1,3]].forEach(([r,c])=>owners[r*N+c]=0);
+      [[0,2],[1,2],[3,3]].forEach(([r,c])=>owners[r*N+c]=1);
+      stats=[{correct:3,wrong:0,times:[8,11,6]},{correct:3,wrong:0,times:[9,14,7]}];turn=7;
+    }
+    return {letters,owners,stats,turn,current:preset==="fresh"&&this.setup?this.setup.first:0,phase:"pick",active:null,q:null,answer:"",deadline:0,remaining:0,result:null,used:[],winPath:[],winner:null,showRules:false,hover:null,last:null,preset};
+  }
+  componentDidUpdate(pp){ if(pp.startState!==this.props.startState){this.clear();this.setState(this.fresh(this.props.startState??"midgame"));} }
+  componentWillUnmount(){this.clear();}
+  clear(){clearInterval(this.iv);clearTimeout(this.to);}
+  limit(){return Number(this.setup?this.setup.timeLimit:(this.props.timeLimit ?? 20))||20;}
+
+  select(i){
+    const s=this.state; if(s.phase!=="pick"||s.owners[i]!==null) return;
+    const L=s.letters[i], pool=BANK.filter(q=>q.letter===L&&q.isActive);
+    const fresh=pool.filter(q=>!s.used.includes(q.id)); const pick=(fresh.length?fresh:pool)[Math.floor(Math.random()*(fresh.length||pool.length))];
+    const ms=this.limit()*1000;
+    this.setState({phase:"question",active:i,q:pick,answer:"",deadline:Date.now()+ms,remaining:ms,used:s.used.concat(pick.id),hover:null});
+    this.clear(); this.iv=setInterval(()=>this.tick(),100);
+    setTimeout(()=>this.inputRef.current&&this.inputRef.current.focus(),60);
+  }
+  tick(){const rem=this.state.deadline-Date.now(); if(rem<=0) this.finish("","timeout"); else this.setState({remaining:rem});}
+  finish(given,kind){
+    const s=this.state; if(s.phase!=="question") return; this.clear();
+    const ok=!kind&&s.q.acceptedAnswers.some(a=>norm(a)===norm(given));
+    const elapsed=Math.min(this.limit(),(this.limit()*1000-Math.max(0,s.deadline-Date.now()))/1000);
+    const owners=s.owners.slice(); if(ok) owners[s.active]=s.current;
+    const stats=s.stats.map((x,i)=>i!==s.current?x:{correct:x.correct+(ok?1:0),wrong:x.wrong+(ok?0:1),times:x.times.concat(elapsed)});
+    const path=ok?this.winPath(owners,s.current):null;
+    this.setState({owners,stats,phase:"result",result:{ok,kind,given},remaining:Math.max(0,s.deadline-Date.now()),winPath:path||[],winner:path?s.current:null});
+    this.to=setTimeout(()=>{
+      if(path){this.setState({phase:"won"});return;}
+      this.setState(st=>({phase:"pick",current:1-st.current,turn:st.turn+1,active:null,last:{name:this.name(st.current),ok,letter:st.q.letter,answer:st.q.answer}}));
+    },2200);
+  }
+  winPath(owners,p){
+    const start=[],isEnd=(r,c)=>p===0?c===N-1:r===N-1;
+    for(let k=0;k<N;k++){const [r,c]=p===0?[k,0]:[0,k]; if(owners[r*N+c]===p) start.push([r,c]);}
+    const prev={},seen=new Set(start.map(([r,c])=>r*N+c)),qu=start.slice();
+    while(qu.length){const [r,c]=qu.shift(); if(isEnd(r,c)){const out=[];let k=r*N+c;while(k!==undefined){out.push(k);k=prev[k];}return out;}
+      for(const [x,y] of nbrs(r,c)){const k=x*N+y; if(!seen.has(k)&&owners[k]===p){seen.add(k);prev[k]=r*N+c;qu.push([x,y]);}}}
+    return null;
+  }
+  name(i){if(this.setup)return this.setup.names[i];return i===0?(this.props.player1Name??"صلاح"):(this.props.player2Name??"سعد");}
+
+  renderVals(){
+    const s=this.state, lim=this.limit(), cur=COLORS[s.current];
+    const cells=s.letters.map((letter,i)=>{
+      const r=Math.floor(i/N),c=i%N,cx=PAD+W/2+c*W+(r%2)*W/2,cy=PAD+R+r*1.5*R;
+      const pts=[0,1,2,3,4,5].map(k=>{const a=Math.PI/180*(60*k-90);return (cx+(R-2)*Math.cos(a)).toFixed(1)+","+(cy+(R-2)*Math.sin(a)).toFixed(1);}).join(" ");
+      const o=s.owners[i], isActive=s.active===i&&(s.phase==="question"||s.phase==="result"), onPath=s.winPath.includes(i);
+      const canPick=s.phase==="pick"&&o===null, hov=canPick&&s.hover===i;
+      return {points:pts,lx:(cx/475*100).toFixed(2)+"%",ly:(cy/408*100).toFixed(2)+"%",letter,
+        fill:o!==null?COLORS[o].c:(isActive||hov)?cur.c1:"var(--color-surface)",
+        stroke:onPath?"var(--color-text)":isActive?cur.c:o!==null?COLORS[o].c:"var(--color-neutral-300)",
+        strokeW:onPath?4:isActive?3:1.5,dash:isActive&&o===null?"6 4":"none",
+        textFill:o!==null?"var(--color-bg)":"var(--color-text)",cursor:canPick?"pointer":"default",
+        onClick:()=>this.select(i),onEnter:()=>canPick&&this.setState({hover:i}),onLeave:()=>this.setState({hover:null})};
+    });
+    const players=[0,1].map(i=>{const st=s.stats[i],act=s.current===i&&s.phase!=="won";
+      return {name:this.name(i),color:COLORS[i].c,goal:GOALS[i],cells:s.owners.filter(o=>o===i).length,correct:st.correct,wrong:st.wrong,
+        avg:st.times.length?(st.times.reduce((a,b)=>a+b,0)/st.times.length).toFixed(1)+" ث":"—",
+        isActive:act,tagClass:COLORS[i].tag,topBorder:act?"4px solid "+COLORS[i].c:"4px solid var(--color-neutral-200)",opacity:act?1:.6};});
+    const secs=Math.ceil(s.remaining/1000), low=secs<=5;
+    const res=s.result||{};
+    return {
+      turn:s.turn, modeLabel:"جهاز واحد", timeLimit:lim, p1Name:this.name(0), p2Name:this.name(1),
+      players, cells, currentName:this.name(s.current), currentColor:cur.c, currentColor700:cur.c7, currentGoal:GOALS[s.current],
+      isPick:s.phase==="pick", isQuestion:s.phase==="question", isResult:s.phase==="result", isWon:s.phase==="won",
+      q:s.q||{}, answer:s.answer, inputRef:this.inputRef,
+      onAnswer:e=>this.setState({answer:e.target.value}),
+      onKey:e=>{if(e.key==="Enter"){e.preventDefault();this.finish(this.state.answer);}},
+      submit:()=>this.finish(this.state.answer), skip:()=>this.finish("","skip"),
+      timerText:"00:"+String(Math.max(0,secs)).padStart(2,"0"), timerPct:(s.remaining/(lim*1000)*100).toFixed(1)+"%",
+      timerColor:low?"var(--color-accent-2-600)":"var(--color-text)",
+      resultTitle:res.ok?"إجابة صحيحة":res.kind==="timeout"?"انتهى الوقت":"إجابة خاطئة",
+      resultColor:res.ok?cur.c7:"var(--color-text)",
+      givenText:res.kind==="timeout"?"لم تُرسل إجابة":res.kind==="skip"?"تخطٍّ":(res.given||"—"),
+      resultNote:s.winner!==null?"اكتمل المسار!":res.ok?"أصبحت الخلية ملكك. ينتقل الدور…":"تبقى الخلية محايدة. ينتقل الدور…",
+      hasLast:!!s.last, lastText:s.last?`${s.last.name} — «${s.last.letter}» ${s.last.ok?"أجاب صحيحاً":"لم يُصب"} (${s.last.answer})`:"",
+      winnerName:s.winner!==null?this.name(s.winner):"", winnerColor700:s.winner!==null?COLORS[s.winner].c7:"inherit",
+      newGame:()=>{this.clear();this.setState(this.fresh("fresh"));},
+      closeWin:()=>this.setState({phase:"over"}),
+      showRules:s.showRules, openRules:()=>this.setState({showRules:true}), closeRules:()=>this.setState({showRules:false}),
+      stop:e=>e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>

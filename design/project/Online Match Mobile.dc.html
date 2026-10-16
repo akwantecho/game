@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/broadsheet-31adaa97-9197-4542-8d6e-46faf5ea3de9/styles.css">
+<script src="_ds/broadsheet-31adaa97-9197-4542-8d6e-46faf5ea3de9/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<style>
+:root{--font-body:"Source Serif 4","Noto Naskh Arabic",serif;--font-heading:"Source Serif 4","Noto Naskh Arabic",serif}
+html,body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)}
+a{color:var(--color-accent-700)}a:hover{color:var(--color-accent-900)}
+</style>
+</helmet>
+<div dir="rtl" lang="ar" style="min-height:100vh;display:flex;flex-direction:column;font-family:var(--font-body)">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;padding:var(--space-4) var(--space-6);border-bottom:3px solid var(--color-text)">
+    <div style="display:flex;align-items:baseline;gap:var(--space-4);flex-wrap:wrap">
+      <div style="font-size:30px;font-weight:700">حرب الحروف</div>
+      <div style="font-size:16px;color:var(--color-neutral-700)">مباراة عبر جهازين · محاكاة</div>
+    </div>
+    <div style="display:flex;gap:var(--space-2)">
+      <a class="btn btn-ghost" href="Players Setup.dc.html" style="text-decoration:none">اللاعبون</a>
+      <button class="btn btn-secondary" onClick="{{ reset }}">إعادة من البداية</button>
+    </div>
+  </header>
+  <p style="margin:var(--space-6) auto 0;padding:0 var(--space-6);max-width:1080px;width:100%;box-sizing:border-box;font-size:17px;line-height:1.6;color:var(--color-neutral-700)">الهاتفان يتشاركان حالة واحدة كما سيفعل الخادم: أنشئ الغرفة على هاتف {{ p1 }}، وانضم بالرمز من هاتف {{ p2 }}، ثم العبا بالتناوب.</p>
+
+  <main style="display:flex;flex-wrap:wrap;justify-content:center;gap:var(--space-8);padding:var(--space-6)">
+    <sc-for list="{{ phones }}" as="ph" hint-placeholder-count="2">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-3)">
+        <div style="display:flex;align-items:center;gap:var(--space-2);font-size:18px;font-weight:600">
+          <span style="width:14px;height:14px;background:{{ ph.color }};clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)"></span>هاتف {{ ph.name }}
+        </div>
+        <div style="width:390px;height:820px;box-sizing:border-box;border:10px solid var(--color-text);border-radius:48px;overflow:hidden;background:var(--color-bg);position:relative;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
+          <div dir="ltr" style="display:flex;justify-content:space-between;align-items:center;padding:12px 26px 6px;font-size:14px;font-weight:600;flex:none">
+            <span>9:41</span><span style="width:90px;height:24px;border-radius:12px;background:var(--color-text)"></span><span>5G</span>
+          </div>
+
+          <sc-if value="{{ ph.showHostLobby }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;display:flex;flex-direction:column;gap:var(--space-4);padding:var(--space-6) var(--space-4)">
+              <div style="font-size:15px;color:var(--color-neutral-700)">غرفة جديدة</div>
+              <h2 style="margin:0;font-size:32px;line-height:1.2;font-weight:700">أرسل الرمز إلى {{ ph.oppName }}</h2>
+              <div dir="ltr" style="font-size:52px;font-weight:700;letter-spacing:.18em;color:var(--color-accent-700);text-align:right">{{ roomCode }}</div>
+              <button class="btn btn-secondary btn-block" onClick="{{ copyCode }}" style="min-height:48px;font-size:17px">{{ copyLabel }}</button>
+              <div style="display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-4)">
+                <sc-for list="{{ lobbyList }}" as="m" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:18px;padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider)">
+                    <span style="display:flex;align-items:center;gap:var(--space-2)"><span style="width:12px;height:12px;background:{{ m.color }};clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)"></span>{{ m.name }}</span>
+                    <span style="font-size:15px;color:{{ m.statusColor }}">{{ m.status }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex:1"></div>
+              <button class="btn btn-primary btn-block" disabled="{{ cantStart }}" onClick="{{ startGame }}" style="min-height:56px;font-size:20px">{{ hostStartLabel }}</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ ph.showGuestJoin }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;display:flex;flex-direction:column;gap:var(--space-4);padding:var(--space-6) var(--space-4)">
+              <div style="font-size:15px;color:var(--color-neutral-700)">الانضمام إلى غرفة</div>
+              <h2 style="margin:0;font-size:32px;line-height:1.2;font-weight:700">أدخل رمز الغرفة</h2>
+              <div class="field">
+                <label for="joincode" style="font-size:15px">الرمز من {{ ph.oppName }}</label>
+                <input id="joincode" class="input" dir="ltr" autocomplete="off" maxlength="5" value="{{ joinCode }}" onChange="{{ onJoinCode }}" placeholder="{{ roomCode }}" style="font-size:36px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:var(--space-3);min-height:64px;width:100%;box-sizing:border-box;text-align:center">
+              </div>
+              <div style="font-size:15px;min-height:22px;color:var(--color-accent-2-700)">{{ joinError }}</div>
+              <div style="flex:1"></div>
+              <button class="btn btn-primary btn-block" onClick="{{ join }}" style="min-height:56px;font-size:20px">انضمام باسم {{ ph.name }}</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ ph.showGuestWait }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:var(--space-3);padding:var(--space-6) var(--space-4)">
+              <div style="font-size:15px;color:var(--color-neutral-700)">الغرفة {{ roomCode }}</div>
+              <h2 style="margin:0;font-size:32px;line-height:1.25;font-weight:700">انضممت. بانتظار أن يبدأ {{ ph.oppName }} المباراة…</h2>
+              <p style="margin:0;font-size:17px;line-height:1.6">ستبني مساراً {{ ph.goal }}.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ ph.showGame }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;display:flex;flex-direction:column;min-height:0">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);padding:var(--space-2) var(--space-4) 0">
+                <sc-for list="{{ ph.strip }}" as="s" hint-placeholder-count="2">
+                  <div style="display:flex;flex-direction:column;gap:2px;border-top:3px solid {{ s.border }};padding-top:var(--space-1);opacity:{{ s.opacity }}">
+                    <div style="display:flex;align-items:center;gap:6px;font-size:17px;font-weight:700">{{ s.name }}<span style="font-size:13px;font-weight:400;color:var(--color-neutral-700)">{{ s.you }}</span></div>
+                    <div style="font-size:13px;color:var(--color-neutral-700)">{{ s.cells }} خلايا · {{ s.goalShort }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="position:relative;margin:var(--space-2) var(--space-3) 0;flex:none">
+                <svg viewBox="0 0 475 408" style="width:100%;height:auto;display:block;overflow:visible">
+                  <line x1="28" y1="12" x2="447" y2="12" stroke="var(--color-accent-2)" stroke-width="6"></line>
+                  <line x1="28" y1="396" x2="447" y2="396" stroke="var(--color-accent-2)" stroke-width="6"></line>
+                  <line x1="10" y1="50" x2="10" y2="358" stroke="var(--color-accent)" stroke-width="6"></line>
+                  <line x1="465" y1="50" x2="465" y2="358" stroke="var(--color-accent)" stroke-width="6"></line>
+                  <sc-for list="{{ ph.cells }}" as="c" hint-placeholder-count="25">
+                    <polygon points="{{ c.points }}" fill="{{ c.fill }}" stroke="{{ c.stroke }}" stroke-width="{{ c.strokeW }}" stroke-dasharray="{{ c.dash }}" onClick="{{ c.onClick }}" style="cursor:{{ c.cursor }};transition:fill .25s"></polygon>
+                  </sc-for>
+                </svg>
+                <sc-for list="{{ ph.cells }}" as="c" hint-placeholder-count="25">
+                  <div style="position:absolute;left:{{ c.lx }};top:{{ c.ly }};transform:translate(-50%,-50%);color:{{ c.textFill }};font-family:'Noto Naskh Arabic',serif;font-size:24px;font-weight:700;line-height:1;pointer-events:none">{{ c.letter }}</div>
+                </sc-for>
+              </div>
+
+              <div style="flex:1;display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3) var(--space-4) var(--space-4);min-height:0">
+                <sc-if value="{{ ph.showPick }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-direction:column;gap:var(--space-1)">
+                    <div style="font-size:14px;color:var(--color-neutral-700)">الجولة {{ turn }}</div>
+                    <div style="font-size:30px;font-weight:700;color:{{ ph.headColor }}">{{ ph.pickTitle }}</div>
+                    <div style="font-size:16px;line-height:1.5">{{ ph.pickNote }}</div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ ph.showQuestion }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)">
+                      <div style="display:flex;align-items:center;gap:var(--space-2)">
+                        <span style="font-family:'Noto Naskh Arabic',serif;font-size:44px;line-height:1;font-weight:700;color:{{ curColor }}">{{ q.letter }}</span>
+                        <span class="tag tag-neutral">{{ q.category }}</span>
+                      </div>
+                      <span dir="ltr" style="font-size:36px;font-weight:600;font-variant-numeric:tabular-nums;color:{{ timerColor }}">{{ timerText }}</span>
+                    </div>
+                    <div style="height:3px;background:var(--color-neutral-200);position:relative;overflow:hidden"><div style="position:absolute;inset-block:0;right:0;width:{{ timerPct }};background:{{ timerColor }}"></div></div>
+                    <div style="font-size:21px;line-height:1.45;font-weight:600;text-wrap:pretty">{{ q.question }}</div>
+                    <sc-if value="{{ ph.isMine }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;gap:var(--space-2);margin-top:var(--space-1)">
+                        <input class="input" autocomplete="off" ref="{{ ph.inputRef }}" value="{{ answer }}" onChange="{{ onAnswer }}" onKeyDown="{{ onKey }}" placeholder="إجابة تبدأ بـ «{{ q.letter }}»" style="flex:1;min-width:0;font-size:20px;min-height:52px;padding:0 var(--space-3)">
+                        <button class="btn btn-primary" onClick="{{ submit }}" style="min-height:52px;font-size:17px">إرسال</button>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ ph.isTheirs }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-size:16px;color:var(--color-neutral-700);margin-top:var(--space-1)">{{ ph.oppName }} يكتب إجابته الآن… لا ترى إجابته حتى يرسلها.</div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ ph.showResult }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:var(--space-1)">
+                    <div style="font-size:14px;color:var(--color-neutral-700)">{{ curName }} · «{{ q.letter }}»</div>
+                    <div style="font-size:34px;font-weight:700;color:{{ resultColor }}">{{ resultTitle }}</div>
+                    <div style="font-size:17px">كتب: {{ givenText }}</div>
+                    <div style="font-size:17px">الإجابة: <b>{{ q.answer }}</b></div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ ph.showWin }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;background:color-mix(in srgb,var(--color-bg) 92%,transparent);display:flex;flex-direction:column;justify-content:flex-end;gap:var(--space-3);padding:var(--space-6) var(--space-4)">
+              <div style="font-size:15px;color:var(--color-neutral-700)">اكتمل المسار في الجولة {{ turn }}</div>
+              <div style="font-size:48px;line-height:1.1;font-weight:700;color:{{ ph.winColor }}">{{ ph.winTitle }}</div>
+              <div style="font-size:17px;line-height:1.6">{{ ph.winStats }}</div>
+              <button class="btn btn-primary btn-block" onClick="{{ rematch }}" style="min-height:56px;font-size:20px;margin-top:var(--space-2)">مباراة أخرى</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;timeLimit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[10,20,30],&quot;default&quot;:20,&quot;tsType&quot;:&quot;number&quot;},&quot;player1Name&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;صلاح&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;player2Name&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;سعد&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const BANK=[
+ ["أ","جغرافيا","ما أكبر قارات العالم مساحة؟","آسيا",["قارة اسيا"]],["ب","جغرافيا","ما عاصمة لبنان؟","بيروت",[]],["ب","جغرافيا","ما عاصمة العراق؟","بغداد",[]],
+ ["ت","ثقافة عامة","ما الثمرة التي تنتجها النخلة؟","تمر",[]],["ث","ثقافة عامة","ما الحيوان الماكر في الحكايات الشعبية؟","ثعلب",[]],["ج","ثقافة عامة","ما الحيوان الملقب بسفينة الصحراء؟","جمل",["ناقة"]],
+ ["ح","علوم","ما أضخم كائن حي على الأرض؟","حوت",["حوت أزرق","الحوت الأزرق"]],["خ","جغرافيا","ما عاصمة السودان؟","الخرطوم",[]],["د","جغرافيا","ما عاصمة سوريا؟","دمشق",[]],
+ ["ذ","علوم","ما المعدن الأصفر النفيس؟","ذهب",[]],["ر","جغرافيا","ما عاصمة المملكة العربية السعودية؟","الرياض",[]],["ز","علوم","ما الكوكب المشهور بحلقاته؟","زحل",[]],
+ ["س","جغرافيا","ما عاصمة كوريا الجنوبية؟","سيول",["سول"]],["ش","علوم","ما النجم الذي تدور حوله الأرض؟","الشمس",[]],["ص","ثقافة عامة","ما الطائر المستخدم في القنص؟","صقر",[]],
+ ["ض","علوم","ما الحيوان البرمائي الذي ينقّ؟","ضفدع",[]],["ط","جغرافيا","ما عاصمة ليبيا؟","طرابلس",[]],["ظ","علوم","ما الحيوان الصحراوي الرشيق ذو القرنين؟","ظبي",["غزال"]],
+ ["ع","علوم","ما أقرب كوكب إلى الشمس؟","عطارد",[]],["غ","إسلاميات","ما الطائر الذي علّم ابن آدم كيف يدفن أخاه؟","غراب",[]],["ف","علوم","ما أضخم حيوان يعيش على اليابسة؟","فيل",[]],
+ ["ق","جغرافيا","ما عاصمة مصر؟","القاهرة",[]],["ك","جغرافيا","ما عاصمة دولة الكويت؟","الكويت",[]],["ل","جغرافيا","ما عاصمة المملكة المتحدة؟","لندن",[]],
+ ["م","جغرافيا","ما عاصمة سلطنة عُمان؟","مسقط",["مدينة مسقط"]],["ن","علوم","ما الحشرة التي تصنع العسل؟","نحلة",["النحل"]],["ه","جغرافيا","ما الدولة التي عاصمتها نيودلهي؟","الهند",[]],
+ ["و","ثقافة عامة","ما الزهرة التي تُهدى رمزاً للمحبة؟","وردة",["ورد"]],["ي","جغرافيا","ما الدولة التي عاصمتها طوكيو؟","اليابان",[]]
+].map((r,i)=>({id:"q_"+(2001+i),letter:r[0],category:r[1],question:r[2],answer:r[3],acceptedAnswers:[r[3]].concat(r[4])}));
+const N=5,R=44,W=Math.sqrt(3)*R,PAD=28;
+const norm=s=>(s||"").trim().replace(/[\u064B-\u065F\u0670\u0640]/g,"").replace(/[أإآٱ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/\s+/g," ").replace(/^ال/,"");
+const nbrs=(r,c)=>{const d=r%2?[[-1,0],[-1,1],[0,-1],[0,1],[1,0],[1,1]]:[[-1,-1],[-1,0],[0,-1],[0,1],[1,-1],[1,0]];return d.map(([a,b])=>[r+a,c+b]).filter(([x,y])=>x>=0&&y>=0&&x<N&&y<N);};
+const COLORS=[{c:"var(--color-accent)",c7:"var(--color-accent-700)",c1:"var(--color-accent-100)"},{c:"var(--color-accent-2)",c7:"var(--color-accent-2-700)",c1:"var(--color-accent-2-100)"}];
+const GOALS=["من اليمين إلى اليسار","من الأعلى إلى الأسفل"],SHORT=["يمين ↔ يسار","أعلى ↕ أسفل"];
+const genCode=()=>Array.from({length:5},()=>"ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*31)]).join("");
+
+class Component extends DCLogic {
+  refs=[React.createRef(),React.createRef()];
+  setup=(()=>{try{const s=JSON.parse(localStorage.getItem("lettersWar.setup"));if(!s)return null;return {names:[0,1].map(d=>s.players.find(p=>p.dir===d).name),first:s.players[s.first].dir,timeLimit:s.timeLimit,room:s.roomCode};}catch(e){return null;}})();
+  state=this.init();
+  init(){
+    const letters=[...new Set(BANK.map(q=>q.letter))].sort(()=>Math.random()-.5).slice(0,25);
+    return {stage:"lobby",joined:false,joinCode:"",joinError:"",room:(this.setup&&this.setup.room)||genCode(),copied:false,
+      letters,owners:Array(25).fill(null),current:this.setup?this.setup.first:0,turn:1,phase:"pick",active:null,q:null,answer:"",deadline:0,remaining:0,result:null,used:[],winPath:[],winner:null,
+      stats:[{c:0,w:0},{c:0,w:0}]};
+  }
+  componentWillUnmount(){this.clear();}
+  clear(){clearInterval(this.iv);clearTimeout(this.to);}
+  limit(){return Number(this.setup?this.setup.timeLimit:(this.props.timeLimit??20))||20;}
+  name(i){return this.setup?this.setup.names[i]:(i===0?(this.props.player1Name??"صلاح"):(this.props.player2Name??"سعد"));}
+
+  select(i,me){
+    const s=this.state; if(s.stage!=="game"||s.phase!=="pick"||me!==s.current||s.owners[i]!==null) return;
+    const pool=BANK.filter(q=>q.letter===s.letters[i]), fr=pool.filter(q=>!s.used.includes(q.id)), list=fr.length?fr:pool, q=list[Math.floor(Math.random()*list.length)];
+    const ms=this.limit()*1000;
+    this.setState({phase:"question",active:i,q,answer:"",deadline:Date.now()+ms,remaining:ms,used:s.used.concat(q.id)});
+    this.clear(); this.iv=setInterval(()=>{const r=this.state.deadline-Date.now(); if(r<=0) this.finish("","timeout"); else this.setState({remaining:r});},100);
+    setTimeout(()=>{const el=this.refs[me].current; el&&el.focus({preventScroll:true});},60);
+  }
+  finish(given,kind){
+    const s=this.state; if(s.phase!=="question") return; this.clear();
+    const ok=!kind&&s.q.acceptedAnswers.some(a=>norm(a)===norm(given));
+    const owners=s.owners.slice(); if(ok) owners[s.active]=s.current;
+    const stats=s.stats.map((x,i)=>i!==s.current?x:{c:x.c+(ok?1:0),w:x.w+(ok?0:1)});
+    const path=ok?this.winPath(owners,s.current):null;
+    this.setState({owners,stats,phase:"result",result:{ok,kind,given},winPath:path||[],winner:path?s.current:null});
+    this.to=setTimeout(()=>{ if(path){this.setState({phase:"won"});return;} this.setState(st=>({phase:"pick",current:1-st.current,turn:st.turn+1,active:null})); },2200);
+  }
+  winPath(owners,p){
+    const start=[],isEnd=(r,c)=>p===0?c===N-1:r===N-1;
+    for(let k=0;k<N;k++){const [r,c]=p===0?[k,0]:[0,k]; if(owners[r*N+c]===p) start.push([r,c]);}
+    const prev={},seen=new Set(start.map(([r,c])=>r*N+c)),qu=start.slice();
+    while(qu.length){const [r,c]=qu.shift(); if(isEnd(r,c)){const out=[];let k=r*N+c;while(k!==undefined){out.push(k);k=prev[k];}return out;}
+      for(const [x,y] of nbrs(r,c)){const k=x*N+y; if(!seen.has(k)&&owners[k]===p){seen.add(k);prev[k]=r*N+c;qu.push([x,y]);}}}
+    return null;
+  }
+
+  renderVals(){
+    const s=this.state, lim=this.limit(), cur=COLORS[s.current], secs=Math.ceil(s.remaining/1000), res=s.result||{};
+    const boardFor=me=>s.letters.map((letter,i)=>{
+      const r=Math.floor(i/N),c=i%N,cx=PAD+W/2+c*W+(r%2)*W/2,cy=PAD+R+r*1.5*R;
+      const points=[0,1,2,3,4,5].map(k=>{const a=Math.PI/180*(60*k-90);return (cx+(R-2)*Math.cos(a)).toFixed(1)+","+(cy+(R-2)*Math.sin(a)).toFixed(1);}).join(" ");
+      const o=s.owners[i], act=s.active===i&&(s.phase==="question"||s.phase==="result"), onPath=s.winPath.includes(i), can=s.phase==="pick"&&o===null&&me===s.current;
+      return {points,letter,lx:(cx/475*100).toFixed(2)+"%",ly:(cy/408*100).toFixed(2)+"%",
+        fill:o!==null?COLORS[o].c:act?cur.c1:"var(--color-surface)",
+        stroke:onPath?"var(--color-text)":act?cur.c:o!==null?COLORS[o].c:can?"var(--color-neutral-500)":"var(--color-neutral-300)",
+        strokeW:onPath?4:act?3:1.5,dash:act&&o===null?"6 4":"none",textFill:o!==null?"var(--color-bg)":"var(--color-text)",
+        cursor:can?"pointer":"default",onClick:()=>this.select(i,me)};
+    });
+    const inGame=s.stage==="game";
+    const phones=[0,1].map(me=>{
+      const opp=1-me, mine=s.current===me, won=s.phase==="won";
+      return {name:this.name(me),oppName:this.name(opp),color:COLORS[me].c,goal:GOALS[me],inputRef:this.refs[me],
+        showHostLobby:me===0&&!inGame, showGuestJoin:me===1&&!inGame&&!s.joined, showGuestWait:me===1&&!inGame&&s.joined,
+        showGame:inGame, showPick:inGame&&s.phase==="pick", showQuestion:inGame&&s.phase==="question", showResult:inGame&&(s.phase==="result"||won),
+        isMine:mine, isTheirs:!mine,
+        pickTitle:mine?"دورك":"دور "+this.name(opp), headColor:mine?COLORS[me].c7:"var(--color-text)",
+        pickNote:mine?"اختر أي حرف محايد من اللوحة.":"ينتظر أن يختار حرفاً…",
+        strip:[me,opp].map(i=>({name:this.name(i),you:i===me?"(أنت)":"",cells:s.owners.filter(o=>o===i).length,goalShort:SHORT[i],
+          border:s.current===i?COLORS[i].c:"var(--color-neutral-200)",opacity:s.current===i?1:.6})),
+        cells:boardFor(me),
+        showWin:inGame&&won, winTitle:s.winner===me?"فزت!":"فاز "+this.name(opp), winColor:s.winner!==null?COLORS[s.winner].c7:"inherit",
+        winStats:`إجاباتك: ${s.stats[me].c} صحيحة و${s.stats[me].w} خاطئة.`};
+    });
+    return {
+      phones, p1:this.name(0), p2:this.name(1), roomCode:s.room, turn:s.turn,
+      copyLabel:s.copied?"نُسخ الرابط":"مشاركة رابط الدعوة",
+      copyCode:()=>{try{navigator.clipboard.writeText(s.room);}catch(e){}this.setState({copied:true});setTimeout(()=>this.setState({copied:false}),1500);},
+      lobbyList:[{name:this.name(0),color:COLORS[0].c,status:"متصل",statusColor:"var(--color-accent-700)"},{name:this.name(1),color:COLORS[1].c,status:s.joined?"انضم":"بانتظار الانضمام…",statusColor:s.joined?"var(--color-accent-700)":"var(--color-neutral-700)"}],
+      cantStart:!s.joined, hostStartLabel:s.joined?"ابدأ المباراة":"بانتظار "+this.name(1),
+      startGame:()=>this.setState({stage:"game"}),
+      joinCode:s.joinCode, joinError:s.joinError,
+      onJoinCode:e=>this.setState({joinCode:e.target.value.toUpperCase(),joinError:""}),
+      join:()=>{ if(s.joinCode.trim().toUpperCase()===s.room) this.setState({joined:true}); else this.setState({joinError:"الرمز غير صحيح. تأكد منه وأعد المحاولة."}); },
+      q:s.q||{}, answer:s.answer, curColor:cur.c, curName:this.name(s.current),
+      onAnswer:e=>this.setState({answer:e.target.value}),
+      onKey:e=>{if(e.key==="Enter"){e.preventDefault();this.finish(this.state.answer);}},
+      submit:()=>this.finish(this.state.answer),
+      timerText:"00:"+String(Math.max(0,secs)).padStart(2,"0"), timerPct:(s.remaining/(lim*1000)*100).toFixed(1)+"%",
+      timerColor:secs<=5?"var(--color-accent-2-600)":"var(--color-text)",
+      resultTitle:res.ok?"إجابة صحيحة":res.kind==="timeout"?"انتهى الوقت":"إجابة خاطئة",
+      resultColor:res.ok?cur.c7:"var(--color-text)", givenText:res.kind==="timeout"?"لم تُرسل إجابة":(res.given||"—"),
+      reset:()=>{this.clear();this.setState(this.init());},
+      rematch:()=>{this.clear();const n=this.init();this.setState({...n,stage:"game",joined:true,room:s.room});}
+    };
+  }
+}
+</script>
+</body>
+</html>

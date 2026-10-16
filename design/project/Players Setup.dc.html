@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/broadsheet-31adaa97-9197-4542-8d6e-46faf5ea3de9/styles.css">
+<script src="_ds/broadsheet-31adaa97-9197-4542-8d6e-46faf5ea3de9/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<style>
+:root{--font-body:"Source Serif 4","Noto Naskh Arabic",serif;--font-heading:"Source Serif 4","Noto Naskh Arabic",serif}
+html,body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)}
+a{color:var(--color-accent-700)}a:hover{color:var(--color-accent-900)}
+</style>
+</helmet>
+<div dir="rtl" lang="ar" style="min-height:100vh;display:flex;flex-direction:column;font-family:var(--font-body)">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;padding:var(--space-4) var(--space-6);border-bottom:3px solid var(--color-text)">
+    <div style="display:flex;align-items:baseline;gap:var(--space-4);flex-wrap:wrap">
+      <div style="font-size:30px;font-weight:700">حرب الحروف</div>
+      <div style="font-size:16px;color:var(--color-neutral-700)">إعداد المباراة</div>
+    </div>
+    <a class="btn btn-ghost" href="Letters War Game.dc.html" style="text-decoration:none">إلى اللوحة</a>
+  </header>
+
+  <main style="flex:1;display:flex;flex-direction:column;gap:var(--space-8);padding:var(--space-8) var(--space-6);max-width:1080px;width:100%;box-sizing:border-box;margin:0 auto">
+    <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+      <h1 style="margin:0;font-size:52px;line-height:1.15;font-weight:700">من سيتنافس؟</h1>
+      <p style="margin:0;font-size:20px;line-height:1.6;max-width:34em;color:var(--color-neutral-700);text-wrap:pretty">اكتبا اسميكما واختارا إعدادات المباراة. يتولى الموقع الأسئلة والوقت والتحكيم.</p>
+    </div>
+
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:var(--space-8)">
+      <sc-for list="{{ players }}" as="p" hint-placeholder-count="2">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3);border-top:4px solid {{ p.color }};padding-top:var(--space-4)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)">
+            <span style="font-size:16px;color:var(--color-neutral-700)">{{ p.label }}</span>
+            <span class="tag {{ p.tagClass }}">{{ p.colorName }}</span>
+          </div>
+          <div class="field">
+            <label for="{{ p.inputId }}" style="font-size:15px">الاسم</label>
+            <input id="{{ p.inputId }}" class="input" autocomplete="off" maxlength="18" value="{{ p.name }}" onChange="{{ p.onName }}" placeholder="{{ p.placeholder }}" style="font-size:26px;font-weight:600;padding:var(--space-3) var(--space-4);min-height:58px;width:100%;box-sizing:border-box">
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-4)">
+            <svg viewBox="0 0 120 64" width="120" height="64" aria-hidden="true" style="flex:none">
+              <sc-if value="{{ p.horizontal }}" hint-placeholder-val="{{ true }}">
+                <g>
+                  <line x1="4" y1="10" x2="4" y2="54" stroke="{{ p.color }}" stroke-width="5"></line>
+                  <line x1="116" y1="10" x2="116" y2="54" stroke="{{ p.color }}" stroke-width="5"></line>
+                  <path d="M104 32 H16 M24 24 L16 32 L24 40" fill="none" stroke="var(--color-text)" stroke-width="2"></path>
+                </g>
+              </sc-if>
+              <sc-if value="{{ p.vertical }}" hint-placeholder-val="{{ false }}">
+                <g>
+                  <line x1="36" y1="4" x2="84" y2="4" stroke="{{ p.color }}" stroke-width="5"></line>
+                  <line x1="36" y1="60" x2="84" y2="60" stroke="{{ p.color }}" stroke-width="5"></line>
+                  <path d="M60 12 V52 M52 44 L60 52 L68 44" fill="none" stroke="var(--color-text)" stroke-width="2"></path>
+                </g>
+              </sc-if>
+            </svg>
+            <p style="margin:0;font-size:18px;line-height:1.5">يبني مساراً متصلاً <b>{{ p.goal }}</b>.</p>
+          </div>
+          <sc-if value="{{ p.isFirst }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:15px;color:var(--color-neutral-700)">يبدأ اللعب أولاً</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </section>
+    <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;margin-top:calc(-1 * var(--space-4))">
+      <button class="btn btn-ghost" onClick="{{ swap }}">تبديل الأدوار والاتجاهات</button>
+      <button class="btn btn-ghost" onClick="{{ randomFirst }}">قرعة: من يبدأ؟</button>
+    </div>
+
+    <section style="display:flex;flex-direction:column;gap:var(--space-6)">
+      <h2 style="margin:0;font-size:30px;font-weight:700">إعدادات المباراة</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:var(--space-6) var(--space-8)">
+        <sc-for list="{{ segGroups }}" as="g" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+            <div style="font-size:17px;font-weight:600">{{ g.title }}</div>
+            <div class="seg" role="radiogroup" style="align-self:flex-start">
+              <sc-for list="{{ g.options }}" as="o" hint-placeholder-count="3">
+                <label class="seg-opt" style="font-size:16px;padding:var(--space-2) var(--space-4);min-height:44px;box-sizing:border-box">
+                  <input type="radio" name="{{ g.key }}" checked="{{ o.checked }}" onChange="{{ o.onPick }}">{{ o.label }}
+                </label>
+              </sc-for>
+            </div>
+            <div style="font-size:14px;color:var(--color-neutral-700)">{{ g.note }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+        <div style="display:flex;align-items:baseline;gap:var(--space-3);flex-wrap:wrap">
+          <div style="font-size:17px;font-weight:600">مجالات الأسئلة</div>
+          <div style="font-size:14px;color:var(--color-neutral-700)">{{ catCount }}</div>
+          <button class="btn btn-ghost" onClick="{{ toggleAll }}" style="font-size:14px;padding:var(--space-1) var(--space-2)">{{ toggleAllLabel }}</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">
+          <sc-for list="{{ cats }}" as="c" hint-placeholder-count="10">
+            <button class="btn {{ c.cls }}" aria-pressed="{{ c.on }}" onClick="{{ c.onToggle }}" style="min-height:44px;font-size:16px">{{ c.name }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <sc-if value="{{ isOnline }}" hint-placeholder-val="{{ false }}">
+      <section style="display:flex;flex-direction:column;gap:var(--space-2)">
+        <div style="font-size:17px;font-weight:600">رمز الغرفة</div>
+        <div style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap">
+          <div dir="ltr" style="font-size:44px;font-weight:700;letter-spacing:.2em;font-variant-numeric:tabular-nums;color:var(--color-accent-700)">{{ roomCode }}</div>
+          <button class="btn btn-secondary" onClick="{{ copyCode }}">{{ copyLabel }}</button>
+        </div>
+        <p style="margin:0;font-size:16px;color:var(--color-neutral-700);max-width:34em">يرسل {{ p1 }} الرمز إلى {{ p2 }} للانضمام من جهازه. يتطلب هذا الوضع ربط الخادم.</p>
+      </section>
+    </sc-if>
+
+    <section style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;padding-top:var(--space-4)">
+      <button class="btn btn-primary" disabled="{{ cantStart }}" onClick="{{ start }}" style="min-height:56px;font-size:20px;padding-inline:var(--space-8)">{{ startLabel }}</button>
+      <div style="font-size:16px;color:var(--color-neutral-700)">{{ summary }}</div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const CATS=["جغرافيا","تاريخ","علوم","رياضة","سيارات","تكنولوجيا","ثقافة عامة","أعمال واقتصاد","إسلاميات","ألغاز"];
+const COLORS=[{c:"var(--color-accent)",tag:"tag-accent",name:"سماوي"},{c:"var(--color-accent-2)",tag:"tag-accent-2",name:"أرجواني"}];
+const GOALS=["من اليمين إلى اليسار","من الأعلى إلى الأسفل"];
+const code=()=>Array.from({length:5},()=>"ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*31)]).join("");
+
+class Component extends DCLogic {
+  state = { names:["",""], dirs:[0,1], first:0, mode:"local", time:20, diff:"easy", cats:CATS.slice(), room:code(), copied:false };
+  set(k,v){this.setState({[k]:v});}
+  renderVals(){
+    const s=this.state, nm=i=>s.names[i].trim();
+    const players=[0,1].map(i=>({label:"اللاعب "+(i===0?"الأول":"الثاني"),inputId:"pname"+i,name:s.names[i],placeholder:i===0?"مثلاً: صلاح":"مثلاً: سعد",
+      color:COLORS[s.dirs[i]].c,tagClass:COLORS[s.dirs[i]].tag,colorName:COLORS[s.dirs[i]].name,goal:GOALS[s.dirs[i]],
+      horizontal:s.dirs[i]===0,vertical:s.dirs[i]===1,isFirst:s.first===i,
+      onName:e=>{const n=s.names.slice();n[i]=e.target.value;this.setState({names:n});}}));
+    const grp=(key,title,opts,note)=>({key,title,note,options:opts.map(([v,label])=>({label,checked:s[key]===v,onPick:()=>this.set(key,v)}))});
+    const segGroups=[
+      grp("mode","نوع اللعب",[["local","جهاز واحد"],["online","جهازان"]],s.mode==="local"?"تتناوبان على الشاشة نفسها.":"كل لاعب على جهازه، والإجابة لصاحب الدور فقط."),
+      grp("time","وقت الإجابة",[[10,"سريع 10ث"],[20,"عادي 20ث"],[30,"مريح 30ث"]],"يبدأ العد عند ظهور السؤال ولا يتوقف."),
+      grp("diff","مستوى الصعوبة",[["easy","سهل"],["mid","متوسط"],["hard","صعب"]],"يُطبَّق على جميع المجالات المختارة.")
+    ];
+    const cats=CATS.map(n=>{const on=s.cats.includes(n);return {name:n,on:String(on),cls:on?"btn-primary":"btn-secondary",
+      onToggle:()=>this.setState(st=>({cats:on?st.cats.filter(x=>x!==n):st.cats.concat(n)}))};});
+    const missing=!nm(0)||!nm(1), same=!missing&&nm(0)===nm(1), noCats=!s.cats.length;
+    const p1=nm(0)||"اللاعب الأول", p2=nm(1)||"اللاعب الثاني";
+    return {
+      players, segGroups, cats, p1, p2,
+      catCount:"المحدد: "+s.cats.length+" من "+CATS.length,
+      toggleAllLabel:s.cats.length===CATS.length?"إلغاء الكل":"تحديد الكل",
+      toggleAll:()=>this.set("cats",s.cats.length===CATS.length?[]:CATS.slice()),
+      swap:()=>this.set("dirs",[s.dirs[1],s.dirs[0]]),
+      randomFirst:()=>this.set("first",Math.random()<.5?0:1),
+      isOnline:s.mode==="online", roomCode:s.room, copyLabel:s.copied?"نُسخ":"نسخ الرمز",
+      copyCode:()=>{navigator.clipboard&&navigator.clipboard.writeText(s.room);this.set("copied",true);setTimeout(()=>this.set("copied",false),1500);},
+      cantStart:missing||same||noCats,
+      startLabel:s.mode==="online"?"إنشاء الغرفة":"ابدأ المباراة",
+      summary:missing?"اكتبا الاسمين للبدء.":same?"اختارا اسمين مختلفين.":noCats?"اختر مجالاً واحداً على الأقل.":`يبدأ ${s.first===0?p1:p2} · ${s.time} ثانية لكل سؤال`,
+      start:()=>{
+        const setup={players:[0,1].map(i=>({name:nm(i),dir:s.dirs[i]})),first:s.first,mode:s.mode,timeLimit:s.time,difficulty:s.diff,categories:s.cats,roomCode:s.mode==="online"?s.room:null};
+        try{localStorage.setItem("lettersWar.setup",JSON.stringify(setup));}catch(e){}
+        window.location.href=s.mode==="online"?"Online Match Mobile.dc.html":"Letters War Game.dc.html";
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
