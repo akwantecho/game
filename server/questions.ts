@@ -2,6 +2,8 @@
 // table). Lives on the server only: the client never receives an answer before
 // the turn's answer has been submitted.
 
+import { EXTRA_ROWS } from "./questions.extra";
+
 export interface Question {
   id: string;
   letter: string;
@@ -13,7 +15,7 @@ export interface Question {
   isActive: boolean;
 }
 
-type Row = [letter: string, category: string, question: string, answer: string, alternatives: string[]];
+export type Row = [letter: string, category: string, question: string, answer: string, alternatives: string[]];
 
 const BASE_COUNT = 42; // the prototype's sample rows; the rest are medium
 
@@ -163,7 +165,7 @@ const ROWS: Row[] = [
  ["ي", "ثقافة عامة", "ما العنصر المشع المستخدم وقوداً في المفاعلات النووية؟", "اليورانيوم", ["يورانيوم"]]
 ];
 
-export const BANK: Question[] = ROWS.map((r, i) => ({
+export const BANK: Question[] = [...ROWS, ...EXTRA_ROWS].map((r, i) => ({
   id: "q_" + (1001 + i),
   letter: r[0],
   category: r[1],
