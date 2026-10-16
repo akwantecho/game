@@ -8,7 +8,7 @@ Two players, one phone each. Built from the Claude Design screen
 npm install
 npm run dev      # Vite on :5173 + room server on :8787 (Vite proxies /ws)
 npm test         # rules, each match variant, and a full two-client match over real WebSockets
-npm run build && npm start   # one process on $PORT (default 8787) serves app + /ws
+npm run build && npm start   # one process on $PORT (default 8787) serves app + /ws; HOST=127.0.0.1 behind a proxy
 ```
 
 To try it with two real phones on the same Wi-Fi, run `npm run dev` and open

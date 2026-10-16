@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { attachHub } from "./hub";
 
 const PORT = Number(process.env.PORT) || 8787;
+/** Set HOST=127.0.0.1 behind a reverse proxy so the port isn't reachable from outside. */
+const HOST = process.env.HOST || undefined;
 const DIST = resolve(fileURLToPath(new URL("../dist", import.meta.url)));
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -36,4 +38,4 @@ const server = createServer((req, res) => {
 });
 
 attachHub(server);
-server.listen(PORT, () => console.log(`Letters War server on http://localhost:${PORT}`));
+server.listen(PORT, HOST, () => console.log(`Letters War server on http://${HOST ?? "localhost"}:${PORT}`));
