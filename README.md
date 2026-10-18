@@ -24,6 +24,21 @@ To try it with two real phones on the same Wi-Fi, run `npm run dev` and open
   holds back questions whose answer has already come up on that letter. Only
   when every question for a letter has been asked does it reuse the one asked
   longest ago.
+- **Accounts.** Players log in with an email and a 4-digit PIN. The first login with an
+  email creates the account with that PIN. `server/store.ts` keeps accounts, login
+  sessions, and the questions each account has been asked in one SQLite file:
+  `$DB_PATH`, by default `data/letters-war.db`, outside git. It uses Node's built-in
+  `node:sqlite`, so there's no extra dependency.
+  - A room skips every question either player was asked in earlier sessions, until a
+    letter runs out.
+  - PINs are hashed with scrypt.
+  - After 5 wrong PINs in a row, an account is locked for 15 minutes, since 4 digits are
+    easy to guess. Each attempt is counted before the hash check, so parallel guesses
+    can't get around the limit.
+  - Question ids are a hash of the letter and question text, so saved history survives
+    edits to the rest of the bank.
+  - The iPhone app uses the same accounts through a small JSON API in `server/api.ts`
+    (`/api/login`, `/api/account`, `/api/history`, `/api/logout`).
 - **`shared/`** contains the board rules (answer normalisation, hex neighbours
   and the win-path search) and the message types.
 - **`src/`** is the React client. Each phone renders its own view of the room.
@@ -84,6 +99,13 @@ The 42-question sample bank is in `server/questions.ts`, using the planned
 table's fields. Swapping it for the database, and keeping room state in
 Redis or Postgres when there is more than one server process, are the two
 things left before this goes to production.
+
+## iPhone app
+
+`ios/` holds a native SwiftUI version for playing in the same room, with a presenter and teams. Phones
+connect directly over Bluetooth or Wi-Fi, with no server. It uses the same question bank: run
+`npm run export:questions` after changing `server/questions*.ts`. The phases and how to run it are in
+[`ios/README.md`](ios/README.md).
 
 ## Design files
 
