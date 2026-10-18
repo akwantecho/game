@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BANK } from "../server/questions";
 import { ANSWER_GRACE_MS, Room } from "../server/room";
+import { Store } from "../server/store";
 import { BUZZ_ANSWER_S, POWER_TIME_S, normalizeAnswer, RESULT_EXTRA_MS, RESULT_MS, stealMs, type Rules, type Special } from "../shared/game";
 
 beforeEach(() => vi.useFakeTimers());
@@ -291,6 +292,30 @@ describe("no repeated questions", () => {
     expect(new Set(asked).size).toBe(pool.length);
     const firstAnswers = asked.slice(0, answers.size).map((id) => normalizeAnswer(byId(id).answer));
     expect(new Set(firstAnswers).size).toBe(answers.size);
+  });
+
+  it("remembers across sessions: a new room skips what the logged-in players were asked before", async () => {
+    vi.useRealTimers(); // scrypt runs on real timers
+    const store = new Store(":memory:");
+    const a = await store.login("a@b.co", "1111");
+    const b = await store.login("b@b.co", "2222");
+    if (!a.ok || !b.ok) throw new Error("login failed");
+    vi.useFakeTimers();
+    const session = (hostAccount: number, guestAccount: number) => {
+      const room = new Room("TESTS", "أ", {}, () => {}, { accountId: hostAccount, history: store });
+      room.join("ب", guestAccount);
+      room.start(0);
+      return room;
+    };
+    const first = missTurns(session(a.account.id, b.account.id), "ظ", 8);
+    // Tomorrow, A plays someone new: still nothing A has seen.
+    const c = await (vi.useRealTimers(), store.login("c@b.co", "3333"));
+    vi.useFakeTimers();
+    if (!c.ok) throw new Error("login failed");
+    const second = missTurns(session(c.account.id, a.account.id), "ظ", 8);
+    expect(second.filter((id) => first.includes(id))).toEqual([]);
+    expect(store.seenCount(a.account.id)).toBe(16);
+    expect(store.seenCount(c.account.id)).toBe(8);
   });
 
   it("remembers across a rematch in the same room", () => {

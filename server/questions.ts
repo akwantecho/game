@@ -2,6 +2,7 @@
 // table). Lives on the server only: the client never receives an answer before
 // the turn's answer has been submitted.
 
+import { createHash } from "node:crypto";
 import { EXTRA_ROWS } from "./questions.extra";
 
 export interface Question {
@@ -165,8 +166,14 @@ const ROWS: Row[] = [
  ["ي", "ثقافة عامة", "ما العنصر المشع المستخدم وقوداً في المفاعلات النووية؟", "اليورانيوم", ["يورانيوم"]]
 ];
 
+/** Ids come from the question itself, not its position, so a player's saved history keeps
+ * pointing at the same questions when others are added or removed. Editing a question's
+ * text gives it a new id, which is what a reworded question should get. */
+const questionId = (letter: string, question: string) =>
+  "q_" + createHash("sha1").update(`${letter}|${question}`).digest("hex").slice(0, 12);
+
 export const BANK: Question[] = [...ROWS, ...EXTRA_ROWS].map((r, i) => ({
-  id: "q_" + (1001 + i),
+  id: questionId(r[0], r[2]),
   letter: r[0],
   category: r[1],
   difficulty: i < BASE_COUNT ? "سهل" : "متوسط",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CODE_LENGTH } from "../shared/game";
 import { Game } from "./Game";
-import { Entry, GuestJoin, GuestWait, HostLobby } from "./Lobby";
+import { Entry, GuestJoin, GuestWait, HostLobby, Login } from "./Lobby";
 import { useRoomServer } from "./net";
 
 const readInvite = () => {
@@ -45,6 +45,14 @@ export function App() {
     screen = <Game view={view} deadline={net.deadline} send={send} onLeave={leave} />;
   } else if (view) {
     screen = view.you === 0 ? <HostLobby view={view} send={send} onLeave={leave} /> : <GuestWait view={view} onLeave={leave} />;
+  } else if (!net.account) {
+    screen = net.checkingAuth ? (
+      <div className="screen" aria-busy="true">
+        <div className="kicker">جارٍ تسجيل الدخول…</div>
+      </div>
+    ) : (
+      <Login invite={invite} error={error?.message ?? null} onLogin={net.login} onEdit={clearError} />
+    );
   } else if (joining !== null) {
     screen = (
       <GuestJoin
@@ -67,6 +75,12 @@ export function App() {
       <Entry
         invite={invite}
         inviteHost={net.peekHost}
+        account={net.account}
+        created={net.created}
+        onLogout={() => {
+          clearError();
+          net.logout();
+        }}
         error={error?.message ?? null}
         onCreate={(name, rules) => {
           clearError();

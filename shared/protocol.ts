@@ -2,6 +2,11 @@ import type { PowerKind, Rules, Seat, Special } from "./game";
 
 // ── client → server ────────────────────────────────────────────────────────
 export type ClientMsg =
+  /** Log in with email and a 4-digit PIN; the first login for an email creates the account. */
+  | { t: "login"; email: string; pin: string }
+  /** Restore a saved login session. */
+  | { t: "auth"; token: string }
+  | { t: "logout" }
   | { t: "create"; name: string; rules?: Partial<Rules> }
   | { t: "join"; code: string; name: string }
   | { t: "resume"; code: string; token: string }
@@ -112,10 +117,32 @@ export interface RoomView {
   sessionWinner: Seat | null;
 }
 
-export type ErrorCode = "bad_code" | "room_full" | "name_taken" | "bad_name" | "session_lost";
+export type ErrorCode =
+  | "bad_code"
+  | "room_full"
+  | "name_taken"
+  | "bad_name"
+  | "session_lost"
+  | "login_required"
+  | "bad_email"
+  | "bad_pin_format"
+  | "bad_pin"
+  | "locked"
+  | "too_many"
+  | "auth_lost";
+
+/** The logged-in account, sent after a login or a restored session. */
+export interface AccountView {
+  email: string;
+  name: string;
+  /** Questions this account has been asked so far: none of them comes back until the rest run out. */
+  seen: number;
+  total: number;
+}
 
 export type ServerMsg =
   | { t: "session"; code: string; token: string; seat: Seat }
   | { t: "state"; view: RoomView }
   | { t: "peek"; code: string; host: string | null }
+  | { t: "account"; token: string; account: AccountView; created: boolean }
   | { t: "error"; code: ErrorCode; message: string };

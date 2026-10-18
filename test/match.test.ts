@@ -22,7 +22,8 @@ afterAll(() => {
 });
 
 /** A test phone: records every message and lets a test wait for a matching one. */
-async function phone() {
+/** A test phone; with `email` it logs in (PIN 1234) before returning. */
+async function phone(email?: string) {
   const ws = new WebSocket(url);
   const log: ServerMsg[] = [];
   let cursor = 0; // messages before this index have been consumed by a wait
@@ -48,7 +49,12 @@ async function phone() {
     });
   const state = (pred: (v: RoomView) => boolean = () => true, timeout?: number) =>
     next<{ t: "state"; view: RoomView }>((m) => m.t === "state" && pred(m.view), timeout).then((m) => m.view);
-  return { ws, log, next, state, send: (m: ClientMsg) => ws.send(JSON.stringify(m)), close: () => ws.close() };
+  const send = (m: ClientMsg) => ws.send(JSON.stringify(m));
+  if (email) {
+    send({ t: "login", email, pin: "1234" });
+    await next((m) => m.t === "account", 8000);
+  }
+  return { ws, log, next, state, send, close: () => ws.close() };
 }
 
 const answerFor = (view: RoomView) =>
@@ -56,8 +62,8 @@ const answerFor = (view: RoomView) =>
 
 describe("online match", () => {
   it("rejects a wrong room code, then plays a full game to a win", async () => {
-    const host = await phone();
-    const guest = await phone();
+    const host = await phone("host1@test.co");
+    const guest = await phone("guest1@test.co");
 
     host.send({ t: "create", name: "صلاح", rules: { timeLimit: 10 } });
     const session = await host.next<{ t: "session"; code: string }>((m) => m.t === "session");
@@ -121,10 +127,10 @@ describe("online match", () => {
   }, 30_000);
 
   it("times out an unanswered question and resumes a dropped phone", async () => {
-    const host = await phone();
+    const host = await phone("host2@test.co");
     host.send({ t: "create", name: "أ", rules: { timeLimit: 10 } });
     const s = await host.next<{ t: "session"; code: string; token: string }>((m) => m.t === "session");
-    const guest = await phone();
+    const guest = await phone("guest2@test.co");
     guest.send({ t: "join", code: s.code, name: "ب" });
     const gs = await guest.next<{ t: "session"; code: string; token: string }>((m) => m.t === "session");
     host.send({ t: "start" });
@@ -157,5 +163,35 @@ describe("online match", () => {
     host.close();
     back.close();
     intruder.close();
+  }, 30_000);
+  it("needs a login to play, and a saved token restores it on a new connection", async () => {
+    type Err = { t: "error"; code: string; message: string };
+    type Acc = { t: "account"; token: string; created: boolean; account: { email: string; seen: number; total: number } };
+    const p = await phone();
+    p.send({ t: "create", name: "أ" });
+    expect((await p.next<Err>((m) => m.t === "error")).code).toBe("login_required");
+    p.send({ t: "login", email: "new@test.co", pin: "12" });
+    expect((await p.next<Err>((m) => m.t === "error")).code).toBe("bad_pin_format");
+    p.send({ t: "login", email: "New@Test.co", pin: "4321" });
+    const acc = await p.next<Acc>((m) => m.t === "account", 8000);
+    expect(acc).toMatchObject({ created: true, account: { email: "new@test.co", seen: 0 } });
+    expect(acc.account.total).toBeGreaterThan(900);
+
+    const later = await phone();
+    later.send({ t: "auth", token: acc.token });
+    expect(await later.next<Acc>((m) => m.t === "account")).toMatchObject({ created: false, account: { email: "new@test.co" } });
+    later.send({ t: "login", email: "new@test.co", pin: "0000" });
+    const wrong = await later.next<Err>((m) => m.t === "error", 8000);
+    expect(wrong.code).toBe("bad_pin");
+    expect(wrong.message).toContain("بقيت لك 4");
+
+    later.send({ t: "logout" });
+    later.send({ t: "create", name: "أ" });
+    expect((await later.next<Err>((m) => m.t === "error")).code).toBe("login_required");
+    // Logging out ends that session everywhere it was used.
+    later.send({ t: "auth", token: acc.token });
+    expect((await later.next<Err>((m) => m.t === "error")).code).toBe("auth_lost");
+    p.close();
+    later.close();
   }, 30_000);
 });

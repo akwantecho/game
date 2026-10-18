@@ -189,6 +189,24 @@ a:hover { color: var(--color-accent-800); }
   mask: var(--logo) center / contain no-repeat;
   animation: logoShine 3.8s ease-in-out infinite;
 }
+.logo-wrap.small { width: min(56%, 220px); }
+
+/* login + account */
+.input.ltr { direction: ltr; text-align: left; }
+.input.pin {
+  direction: ltr; text-align: center; font-size: 34px; font-weight: 900; letter-spacing: .5em;
+  min-height: 64px; padding: 0 0 0 .5em; color: var(--color-accent-700);
+}
+.account-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: 24px; }
+.account-email {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 14px; font-weight: 700; color: var(--color-neutral-700);
+}
+.hint-note {
+  margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+  font-size: 14px; line-height: 1.6; font-weight: 600; color: var(--color-neutral-700);
+  background: var(--color-neutral-100); border: 1px solid var(--color-divider);
+}
 .invite-title { align-self: center; text-align: center; font-size: clamp(22px, 6vw, 30px); }
 
 @keyframes logoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }

@@ -19,6 +19,7 @@ import {
 } from "../shared/game";
 import type { Attempt, Phase, RoomView, TurnResult } from "../shared/protocol";
 import { BANK, type Question } from "./questions";
+import type { History } from "./store";
 
 /** Answers that arrive this long after the deadline still count (network latency). */
 export const ANSWER_GRACE_MS = 400;
@@ -30,11 +31,14 @@ const SPECIAL_KINDS: readonly Special[] = ["gold", "bomb", "fast"];
 const LETTERS = [...new Set(BANK.filter((q) => q.isActive).map((q) => q.letter))];
 /** Two questions with the same answer on the same letter feel like a repeat. */
 const answerKey = (q: Question) => `${q.letter}:${normalizeAnswer(q.answer)}`;
+const BY_ID = new Map(BANK.map((q) => [q.id, q]));
 
 interface Player {
   name: string;
   token: string;
   connections: number;
+  /** The logged-in account playing this seat, whose question history the room honours. */
+  accountId: number | null;
 }
 
 type Powers = Record<PowerKind, boolean>;
@@ -133,18 +137,22 @@ export class Room {
   wins: [number, number] = [0, 0];
   lastActive = Date.now();
   private timer: ReturnType<typeof setTimeout> | undefined;
-  /** When each question was asked in this room (a running count). Kept across rematches. */
+  /** When each question was last asked to anyone in this room: in this room, or in the players'
+   * earlier sessions (from `history`). Kept across rematches. */
   private asked = new Map<string, number>();
-  private asks = 0;
+  private lastAsk = 0;
   private answersSeen = new Set<string>();
+  private history: History | null;
 
   constructor(
     readonly code: string,
     hostName: string,
     rules: unknown,
     private onChange: (room: Room) => void,
+    { accountId = null, history = null }: { accountId?: number | null; history?: History | null } = {},
   ) {
-    this.players = [{ name: hostName, token: token(), connections: 0 }, null];
+    this.players = [{ name: hostName, token: token(), connections: 0, accountId }, null];
+    this.history = history;
     this.rules = sanitizeRules(rules);
     this.game = newGame(this.rules);
   }
@@ -160,10 +168,10 @@ export class Room {
     return null;
   }
 
-  join(name: string): { seat: Seat; token: string } | "room_full" | "name_taken" {
+  join(name: string, accountId: number | null = null): { seat: Seat; token: string } | "room_full" | "name_taken" {
     if (this.players[1]) return "room_full";
     if (normalizeAnswer(name) === normalizeAnswer(this.players[0].name)) return "name_taken";
-    const p = { name, token: token(), connections: 0 };
+    const p = { name, token: token(), connections: 0, accountId };
     this.players[1] = p;
     this.changed();
     return { seat: 1, token: p.token };
@@ -197,6 +205,7 @@ export class Room {
 
   start(seat: Seat) {
     if (seat !== 0 || this.stage !== "lobby" || !this.players[1]) return;
+    this.loadHistory();
     this.stage = "game";
     this.round = 1;
     this.wins = [0, 0];
@@ -299,9 +308,27 @@ export class Room {
     return pool.reduce((a, b) => (this.asked.get(a.id)! <= this.asked.get(b.id)! ? a : b));
   }
 
+  private get accountIds(): number[] {
+    return [...new Set(this.players.map((p) => p?.accountId).filter((id): id is number => id != null))];
+  }
+
+  /** Fold in what the players were asked in earlier sessions, so this match doesn't repeat it. */
+  private loadHistory() {
+    if (!this.history) return;
+    for (const [id, at] of this.history.seen(this.accountIds)) {
+      const q = BY_ID.get(id);
+      if (!q) continue; // a question since removed or reworded
+      if ((this.asked.get(id) ?? 0) < at) this.asked.set(id, at);
+      this.answersSeen.add(answerKey(q));
+    }
+  }
+
   private remember(q: Question) {
-    this.asked.set(q.id, ++this.asks);
+    // Strictly increasing, so "asked longest ago" is never a tie, even within one millisecond.
+    this.lastAsk = Math.max(Date.now(), this.lastAsk + 1);
+    this.asked.set(q.id, this.lastAsk);
     this.answersSeen.add(answerKey(q));
+    this.history?.record(this.accountIds, q.id, this.lastAsk);
   }
 
   /** Start a buzz or answer window, halved on a fast cell. */

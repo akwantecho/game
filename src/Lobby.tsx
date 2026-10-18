@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CODE_LENGTH, GOALS, POWER_TIME_S, PRESETS, ROUNDS, SIZES, TIME_LIMITS, describeRules, presetOf, type Rules } from "../shared/game";
-import type { ClientMsg, RoomView } from "../shared/protocol";
+import type { AccountView, ClientMsg, RoomView } from "../shared/protocol";
 import { COLORS } from "./theme";
 import logo from "./assets/logo.png";
 
@@ -40,20 +40,132 @@ const saveRules = (r: Rules) => {
 const inviteUrl = (code: string) => `${location.origin}${location.pathname}?room=${code}`;
 
 /** First screen on each phone: your name, then create a room or join one. */
+const EMAIL_KEY = "lettersWar.email";
+const readEmail = () => {
+  try {
+    return localStorage.getItem(EMAIL_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+const saveEmail = (e: string) => {
+  try {
+    localStorage.setItem(EMAIL_KEY, e);
+  } catch {
+    /* ignore */
+  }
+};
+/** Arabic keyboards type ٠-٩ (or Persian ۰-۹): the PIN is stored with 0-9. */
+const latinDigits = (s: string) =>
+  s.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x6f0));
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Email and a 4-digit PIN. The first login with an email creates the account with that PIN. */
+export function Login({
+  invite,
+  error,
+  onLogin,
+  onEdit,
+}: {
+  invite: string | null;
+  error: string | null;
+  onLogin: (email: string, pin: string) => void;
+  onEdit: () => void;
+}) {
+  const [email, setEmail] = useState(readEmail);
+  const [pin, setPin] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => setBusy(false), [error]);
+  const clean = email.trim().toLowerCase();
+  const ok = EMAIL.test(clean) && /^[0-9]{4}$/.test(pin);
+  return (
+    <form
+      className="screen entry"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!ok || busy) return;
+        saveEmail(clean);
+        setBusy(true);
+        onLogin(clean, pin);
+      }}
+    >
+      <div className="kicker">{invite ? `دعوة إلى الغرفة ${invite}` : "تسجيل الدخول"}</div>
+      <div className="logo-wrap small" style={{ ["--logo" as string]: `url(${logo})` }}>
+        <img className="logo" src={logo} alt="حرب الحروف" draggable={false} />
+      </div>
+      <div className="field">
+        <label htmlFor="email" className="lg">
+          البريد الإلكتروني
+        </label>
+        <input
+          id="email"
+          className="input name ltr"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="off"
+          spellCheck={false}
+          maxLength={254}
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            onEdit();
+          }}
+          placeholder="name@example.com"
+        />
+      </div>
+      <div className="field">
+        <label htmlFor="pin" className="lg">
+          رمز الدخول (4 أرقام)
+        </label>
+        <input
+          id="pin"
+          className="input pin"
+          type="password"
+          inputMode="numeric"
+          autoComplete="current-password"
+          pattern="[0-9]*"
+          maxLength={4}
+          value={pin}
+          onChange={(e) => {
+            setPin(latinDigits(e.target.value).replace(/[^0-9]/g, "").slice(0, 4));
+            onEdit();
+          }}
+          placeholder="••••"
+        />
+      </div>
+      <p className="hint-note">أول مرة؟ اكتب بريدك واختر 4 أرقام تتذكرها. سننشئ حسابك بها، وتدخل بها في كل مرة، ولن تتكرر عليك الأسئلة.</p>
+      <div className="field-error" role="alert">
+        {error}
+      </div>
+      <div className="spacer" />
+      <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={!ok || busy}>
+        {busy ? "جارٍ الدخول…" : "دخول"}
+      </button>
+    </form>
+  );
+}
+
 export function Entry({
   invite,
   inviteHost,
   error,
+  account,
+  created,
+  onLogout,
   onCreate,
   onJoin,
 }: {
   invite: string | null;
   inviteHost: string | null;
   error: string | null;
+  account: AccountView;
+  created: boolean;
+  onLogout: () => void;
   onCreate: (name: string, rules: Partial<Rules> | undefined) => void;
   onJoin: (name: string) => void;
 }) {
-  const [name, setName] = useState(readName);
+  const [name, setName] = useState(() => readName() || account.name);
   const clean = name.trim();
   const go = (fn: () => void) => {
     saveName(clean);
@@ -61,7 +173,15 @@ export function Entry({
   };
   return (
     <div className="screen entry">
-      <div className="kicker">{invite ? `دعوة إلى الغرفة ${invite}` : "مباراة عبر جهازين"}</div>
+      <div className="account-bar">
+        <span className="account-email" dir="ltr">
+          {account.email}
+        </span>
+        <button className="btn btn-ghost top" onClick={onLogout}>
+          خروج
+        </button>
+      </div>
+      <div className="kicker">{invite ? `دعوة إلى الغرفة ${invite}` : created ? "أهلاً بك! أُنشئ حسابك." : "مباراة عبر جهازين"}</div>
       <div className="logo-wrap" style={{ ["--logo" as string]: `url(${logo})` }}>
         <img className="logo" src={logo} alt="حرب الحروف" draggable={false} />
       </div>
@@ -80,6 +200,11 @@ export function Entry({
           placeholder="اكتب اسمك"
         />
       </div>
+      <p className="hint-note">
+        {account.seen
+          ? `سُئلت ${account.seen} من ${account.total} سؤالاً حتى الآن، ولن يتكرر عليك أي منها حتى تنتهي البقية.`
+          : `أمامك ${account.total} سؤالاً، ولن يتكرر عليك أي منها حتى تنتهي كلها.`}
+      </p>
       <div className="field-error">{error}</div>
       <div className="spacer" />
       {invite ? (
